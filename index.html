@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#171428">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Habitudes">
+<title>Habitudes — suivi quotidien</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root{
+    --bg:#171428; --bg-deep:#100e1e;
+    --surface-1:#211c39; --surface-2:#2a2447; --surface-3:#332c57;
+    --border:#3c3560; --border-soft:#2e2850;
+    --text:#f2eefc; --text-secondary:#b6acd6; --text-muted:#8478a8;
+    --accent:#b6a6f0; --accent-strong:#8e7bdc; --accent-bg:#332a5c;
+    --gold:#e8c07d; --font-display:'Fraunces', serif; --font-body:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: var(--font-body);
+    background: radial-gradient(circle at 15% 8%, rgba(182,166,240,0.10), transparent 40%), var(--bg-deep);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .app{ max-width: 440px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 20px) 18px 90px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .date{ font-size:13px; color: var(--text-secondary); margin:0 0 2px; text-transform:capitalize; }
+  h1{ font-family: var(--font-display); font-weight:500; font-size:24px; margin:0; }
+  .add-btn{ width:40px; height:40px; border-radius:50%; background: var(--accent-bg); border:none; color: var(--accent); font-size:17px; display:flex; align-items:center; justify-content:center; }
+
+  .smart-tip{ background: var(--surface-1); border:1px solid var(--border-soft); border-radius:14px; padding:12px 14px; margin-bottom:18px; display:flex; gap:10px; align-items:center; }
+  .smart-tip i{ font-size:18px; color: var(--accent); }
+  .smart-tip p{ margin:0; }
+  .smart-tip .st-title{ font-size:12.5px; font-weight:600; }
+  .smart-tip .st-sub{ font-size:11.5px; color: var(--text-secondary); margin-top:1px; }
+
+  .habit{ display:flex; align-items:center; gap:12px; padding:13px; background: var(--surface-1); border:1px solid var(--border-soft); border-radius:14px; margin-bottom:9px; }
+  .habit .check{ width:30px; height:30px; border-radius:50%; border:1.5px solid var(--border); background:transparent; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .habit .check.done{ background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+  .habit .h-icon{ font-size:19px; color: var(--text-secondary); width:22px; text-align:center; }
+  .habit .h-name{ font-size:14.5px; font-weight:600; margin:0; }
+  .habit .h-meta{ font-size:11.5px; color: var(--text-muted); margin:2px 0 0; }
+  .habit .h-del{ background:none; border:none; color: var(--text-muted); font-size:15px; padding:6px; }
+
+  .empty{ text-align:center; padding: 40px 20px; color: var(--text-muted); }
+  .empty i{ font-size:26px; margin-bottom:10px; display:block; }
+
+  .stats-title{ font-size:13px; color: var(--text-secondary); margin: 22px 0 10px; }
+  .stats-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .stat-card{ background: var(--surface-1); border:1px solid var(--border-soft); border-radius:14px; padding:13px; }
+  .stat-card .s-lbl{ font-size:11.5px; color: var(--text-muted); margin:0 0 4px; }
+  .stat-card .s-val{ font-family: var(--font-display); font-size:22px; font-weight:500; margin:0; }
+
+  .sheet-overlay{ position:fixed; inset:0; background: rgba(10,8,20,0.6); display:flex; align-items:flex-end; z-index:50; opacity:0; pointer-events:none; transition: opacity .2s; }
+  .sheet-overlay.open{ opacity:1; pointer-events:auto; }
+  .sheet{ background: var(--surface-2); border-radius: 22px 22px 0 0; padding: 18px 18px calc(env(safe-area-inset-bottom) + 18px); width:100%; max-width:440px; margin:0 auto; transform: translateY(100%); transition: transform .25s; max-height: 85vh; overflow-y:auto; }
+  .sheet-overlay.open .sheet{ transform: translateY(0); }
+  .sheet-handle{ width:36px; height:4px; background: var(--border); border-radius:2px; margin: 0 auto 16px; }
+  .field-label{ font-size:12px; color: var(--text-secondary); margin: 0 0 8px; }
+  .icon-grid{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; margin-bottom:16px; }
+  .icon-opt{ aspect-ratio:1; border-radius:12px; background: var(--surface-1); border:1px solid var(--border-soft); color: var(--text-secondary); display:flex; align-items:center; justify-content:center; font-size:17px; }
+  .icon-opt.sel{ background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+  input[type=text], input[type=time]{ width:100%; background: var(--surface-1); border:1px solid var(--border-soft); color: var(--text); border-radius:12px; padding:12px 14px; font-family: var(--font-body); font-size:14.5px; margin-bottom:16px; }
+  .btn-primary{ width:100%; background: linear-gradient(135deg, var(--accent-strong), var(--accent)); color:#1a1530; border:none; border-radius:14px; padding:14px; font-size:14.5px; font-weight:700; }
+  .btn-cancel{ width:100%; background:none; border:none; color: var(--text-muted); padding:12px; font-size:13px; }
+
+  .toast{ position:fixed; left:18px; right:18px; bottom: calc(env(safe-area-inset-bottom) + 16px); max-width: 400px; margin:0 auto; background: var(--surface-3); border:1px solid var(--border); color: var(--text); font-size:13px; padding:12px 16px; border-radius:14px; display:flex; align-items:center; gap:8px; opacity:0; transform: translateY(10px); transition: all .25s; z-index: 60; pointer-events:none; }
+  .toast.show{ opacity:1; transform: translateY(0); }
+  .toast i{ color: var(--accent); }
+
+  .install-banner{ background: var(--surface-1); border:1px solid var(--border-soft); border-radius:14px; padding:12px 14px; margin-bottom:18px; display:none; align-items:center; gap:10px; }
+  .install-banner.show{ display:flex; }
+  .install-banner i{ font-size:18px; color: var(--gold); }
+  .install-banner p{ margin:0; font-size:12px; color: var(--text-secondary); }
+  .install-banner button{ margin-left:auto; background: var(--accent-bg); color: var(--accent); border:none; border-radius:10px; padding:7px 12px; font-size:12px; font-weight:600; white-space:nowrap; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div><p class="date" id="today-date"></p><h1>Tes habitudes</h1></div>
+    <button class="add-btn" id="add-btn" aria-label="Ajouter"><i class="fa-solid fa-plus"></i></button>
+  </div>
+
+  <div class="install-banner" id="install-banner">
+    <i class="fa-solid fa-mobile-screen-button"></i>
+    <p>Installe cette app sur ton écran d'accueil pour l'ouvrir comme une vraie appli.</p>
+    <button id="install-btn">Installer</button>
+  </div>
+
+  <div class="smart-tip">
+    <i class="fa-solid fa-bolt"></i>
+    <div><p class="st-title">Rappel intelligent</p><p class="st-sub">Coche tes habitudes chaque jour pour affiner tes rappels.</p></div>
+  </div>
+
+  <div id="habit-list"></div>
+  <div class="empty" id="empty-state" style="display:none;">
+    <i class="fa-regular fa-calendar-plus"></i>
+    Ajoute ta première habitude avec le bouton +
+  </div>
+
+  <p class="stats-title">Cette semaine</p>
+  <div class="stats-grid">
+    <div class="stat-card"><p class="s-lbl">Taux de réussite</p><p class="s-val" id="success-rate">0%</p></div>
+    <div class="stat-card"><p class="s-lbl">Meilleure série</p><p class="s-val" id="best-streak">0 jours</p></div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="sheet-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <p class="field-label">Choisis une icône</p>
+    <div class="icon-grid" id="icon-grid"></div>
+    <p class="field-label">Nom de l'habitude</p>
+    <input id="habit-name-input" type="text" placeholder="ex. Méditer 5 minutes" />
+    <p class="field-label">Heure de rappel</p>
+    <input id="habit-time-input" type="time" value="08:00" />
+    <button class="btn-primary" id="create-btn">Créer l'habitude</button>
+    <button class="btn-cancel" id="cancel-btn">Annuler</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toast-text"></span></div>
+
+<script>
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  function showToast(text){
+    const t = document.getElementById('toast');
+    document.getElementById('toast-text').textContent = text;
+    t.classList.add('show');
+    clearTimeout(window._tt);
+    window._tt = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  const STORAGE_KEY = 'habits_app_v1';
+  const todayKey = new Date().toISOString().slice(0,10);
+
+  function loadHabits(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch(e){}
+    return [
+      {id: 'h1', icon:'fa-droplet', name:"Boire de l'eau", time:'08:00', streak:14, doneDates:[]},
+      {id: 'h2', icon:'fa-person-walking', name:'Marche 20 minutes', time:'12:30', streak:6, doneDates:[]},
+      {id: 'h3', icon:'fa-book', name:'Lire 10 pages', time:'20:45', streak:21, doneDates:[]}
+    ];
+  }
+  function saveHabits(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(habits)); }
+
+  let habits = loadHabits();
+  const list = document.getElementById('habit-list');
+  const emptyState = document.getElementById('empty-state');
+
+  function render(){
+    list.innerHTML = '';
+    emptyState.style.display = habits.length === 0 ? 'block' : 'none';
+    habits.forEach(h => {
+      const done = h.doneDates.includes(todayKey);
+      const row = document.createElement('div');
+      row.className = 'habit';
+      row.innerHTML =
+        '<button class="check' + (done ? ' done' : '') + '" data-id="' + h.id + '">' +
+          (done ? '<i class="fa-solid fa-check"></i>' : '') +
+        '</button>' +
+        '<i class="fa-solid ' + h.icon + ' h-icon"></i>' +
+        '<div style="flex:1;"><p class="h-name">' + h.name + '</p><p class="h-meta">' + h.time + ' · série de ' + h.streak + ' jours</p></div>' +
+        '<button class="h-del" data-id="' + h.id + '" aria-label="Supprimer"><i class="fa-solid fa-trash"></i></button>';
+      list.appendChild(row);
+    });
+    document.querySelectorAll('.check').forEach(btn => {
+      btn.addEventListener('click', () => toggleHabit(btn.dataset.id));
+    });
+    document.querySelectorAll('.h-del').forEach(btn => {
+      btn.addEventListener('click', () => deleteHabit(btn.dataset.id));
+    });
+    updateStats();
+  }
+
+  function toggleHabit(id){
+    const h = habits.find(x => x.id === id);
+    if (!h) return;
+    const idx = h.doneDates.indexOf(todayKey);
+    if (idx >= 0){ h.doneDates.splice(idx,1); h.streak = Math.max(0, h.streak - 1); }
+    else { h.doneDates.push(todayKey); h.streak += 1; }
+    saveHabits();
+    render();
+  }
+
+  function deleteHabit(id){
+    habits = habits.filter(h => h.id !== id);
+    saveHabits();
+    render();
+  }
+
+  function updateStats(){
+    const total = habits.length;
+    const done = habits.filter(h => h.doneDates.includes(todayKey)).length;
+    document.getElementById('success-rate').textContent = total ? Math.round((done/total)*100) + '%' : '0%';
+    const best = habits.reduce((m,h) => Math.max(m, h.streak), 0);
+    document.getElementById('best-streak').textContent = best + ' jours';
+  }
+
+  render();
+
+  const icons = ['fa-droplet','fa-person-walking','fa-book','fa-moon','fa-spa','fa-apple-whole','fa-pen','fa-music','fa-dumbbell','fa-mug-hot'];
+  let selectedIcon = icons[0];
+  const iconGrid = document.getElementById('icon-grid');
+  icons.forEach(ic => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'icon-opt' + (ic === selectedIcon ? ' sel' : '');
+    btn.dataset.icon = ic;
+    btn.innerHTML = '<i class="fa-solid ' + ic + '"></i>';
+    btn.addEventListener('click', () => {
+      selectedIcon = ic;
+      iconGrid.querySelectorAll('.icon-opt').forEach(b => b.classList.toggle('sel', b.dataset.icon === ic));
+    });
+    iconGrid.appendChild(btn);
+  });
+
+  const overlay = document.getElementById('sheet-overlay');
+  function openSheet(){
+    document.getElementById('habit-name-input').value = '';
+    document.getElementById('habit-time-input').value = '08:00';
+    overlay.classList.add('open');
+  }
+  function closeSheet(){ overlay.classList.remove('open'); }
+  document.getElementById('add-btn').addEventListener('click', openSheet);
+  document.getElementById('cancel-btn').addEventListener('click', closeSheet);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeSheet(); });
+
+  document.getElementById('create-btn').addEventListener('click', () => {
+    const nameInput = document.getElementById('habit-name-input').value.trim();
+    const time = document.getElementById('habit-time-input').value || '08:00';
+    if (!nameInput){ showToast('Donne un nom a ton habitude'); return; }
+    habits.push({ id: 'h' + Date.now(), icon: selectedIcon, name: nameInput, time: time, streak: 0, doneDates: [] });
+    saveHabits();
+    render();
+    closeSheet();
+    showToast('Habitude creee : ' + nameInput);
+  });
+
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('install-banner').classList.add('show');
+  });
+  document.getElementById('install-btn').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    document.getElementById('install-banner').classList.remove('show');
+  });
+  window.addEventListener('appinstalled', () => {
+    document.getElementById('install-banner').classList.remove('show');
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
